@@ -1,0 +1,6 @@
+{
+  "name": "FRITZ!DECT Thermostat Card",
+  "filename": "fritzdect-thermostat-card.js",
+  "render_readme": true,
+  "homeassistant": "2025.1.0"
+}

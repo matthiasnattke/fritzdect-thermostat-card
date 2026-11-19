@@ -14,7 +14,10 @@ A radiator thermostat as a big dial – made for **AVM FRITZ!DECT** thermostats 
 
 ## Installation
 
-**HACS:** HACS → ⋮ → *Custom repositories* → add this repository with type *Dashboard* → install → reload the browser.
+**HACS (recommended):** open HACS, search for **FRITZ!DECT Thermostat Card**, install it and reload the browser.
+
+If it does not show up yet: HACS → ⋮ → *Custom repositories* → add this repository with type *Dashboard* → install → reload the browser.
+
 **Manual:** copy `fritzdect-thermostat-card.js` to `config/www/` and add `/local/fritzdect-thermostat-card.js` as a JavaScript module resource.
 
 ## Options

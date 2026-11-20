@@ -1,7 +1,7 @@
 /* FRITZ!DECT Thermostat Card – radiator thermostat as a dial with target temperature, window/summer/holiday state,
    schedule, battery and 24-hour history. Works with any climate entity; the extra sensors come from the AVM FRITZ!SmartHome integration.
    MIT License – see LICENSE */
-const FTC_VERSION = '1.0.0';
+const FTC_VERSION = '1.0.2';
 const FTC_LANG = (h) => { const l = ((h && ((h.locale && h.locale.language) || h.language)) || 'en').slice(0, 2); return l === 'de' ? 'de' : 'en'; };
 const FTC_I18N = {
   en: { notFound: (e) => `Thermostat ${e} not found`, unavailable: 'unavailable', window: 'Window open', off: 'off', heating: (t) => `heating to ${t}°`, target: (t) => `target ${t}°`, comfort: 'Comfort', eco: 'Eco', offBtn: 'Off', winChip: '🪟 Window open – heating paused', summer: '☀️ Summer mode', holiday: '🧳 Holiday mode', battery: (v) => `🔋 Battery ${v} %`, next: (d, p, t) => `From ${d}: ${p}${t}`, schedule: 'schedule', windowShort: 'Window', h24: (lo, hi) => `last 24 h · ${lo}–${hi} °C`, legend: '— room &nbsp;┄ target', colder: 'colder', warmer: 'warmer', clock: '' },
@@ -65,7 +65,7 @@ class FritzdectThermostatCard extends HTMLElement {
     const de = (v, d) => (v == null || isNaN(v) ? '–' : Number(v).toLocaleString(loc, { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }));
     if (!s) { this.shadowRoot.innerHTML = `<ha-card style="padding:14px">${esc(T.notFound(c.entity))}</ha-card>`; return; }
     const R = (p, k) => this._R(p, k), on = (x) => !!x && x.state === 'on', num = (x) => (x && !isNaN(parseFloat(x.state)) ? parseFloat(x.state) : null);
-    const a = s.attributes, P = this._p, min = a.min_temp || 8, max = a.max_temp || 28, mcur = (c.members || []).map((id) => h.states[id] && h.states[id].attributes.current_temperature).filter((v) => v != null).map(Number), cur = a.current_temperature != null ? Number(a.current_temperature) : mcur.length ? mcur.reduce((x, y) => x + y, 0) / mcur.length : NaN, off = s.state === 'off' || s.state === 'unavailable';
+    const a = s.attributes, P = this._p, rmin = Number(a.min_temp), rmax = Number(a.max_temp), lim = isFinite(rmin) && isFinite(rmax) && rmax > rmin, min = lim ? rmin : 8, max = lim ? rmax : 28, mcur = (c.members || []).map((id) => h.states[id] && h.states[id].attributes.current_temperature).filter((v) => v != null).map(Number), cur = a.current_temperature != null ? Number(a.current_temperature) : mcur.length ? mcur.reduce((x, y) => x + y, 0) / mcur.length : NaN, off = s.state === 'off' || s.state === 'unavailable';
     const tgt = this._pend != null ? this._pend : Number(a.temperature), win = on(R(P, 'window')), summer = on(R(P, 'summer')), holiday = on(R(P, 'holiday'));
     const heating = !off && !win && !summer && !isNaN(tgt) && !isNaN(cur) && tgt > cur + 0.2;
     const col = s.state === 'unavailable' ? '#9aa0a6' : win ? '#3d8bd9' : off ? '#9aa0a6' : heating ? '#f4731f' : '#2aa39a';
@@ -82,7 +82,7 @@ ${!off && !isNaN(tgt) ? `<path d="${arc(A0, Math.max(A0 + 1, ang(tgt)), 80)}" fi
 ${cm ? `<circle cx="${cm[0].toFixed(1)}" cy="${cm[1].toFixed(1)}" r="5" fill="#fff" stroke="#333" stroke-width="2"/>` : ''}
 <text x="100" y="${win || off ? 96 : 100}" text-anchor="middle" class="big">${de(cur)}<tspan class="un">°</tspan></text>
 <text x="100" y="121" text-anchor="middle" class="sm" fill="${col}">${s.state === 'unavailable' ? T.unavailable : win ? T.window : off ? T.off : heating ? T.heating(de(tgt)) : T.target(de(tgt))}</text>
-<text x="34" y="180" class="mm">${min}°</text><text x="166" y="180" text-anchor="end" class="mm">${max}°</text>
+<text x="34" y="180" class="mm">${de(min, min % 1 ? 1 : 0)}°</text><text x="166" y="180" text-anchor="end" class="mm">${de(max, max % 1 ? 1 : 0)}°</text>
 </svg>`;
     const kom = num(R(P, 'comfort')), eco = num(R(P, 'eco')), pm = a.preset_mode;
     const pre = (id, icon, label, t) => `<button class="ps${!off && pm === id ? ' on' : ''}" data-pre="${id}">${icon} ${label}${t != null ? `<small>${de(t)}°</small>` : ''}</button>`;
